@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAKE MOBIL AMBO - Kanwil DJPb Prov. Sumatera Barat</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- NAVBAR HEADER LANDING PAGE -->
+    <header class="bg-blue-900 text-white border-b-4 border-amber-500 shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-500 p-1.5 rounded-lg flex items-center justify-center w-11 h-11 shadow-sm">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/22/Logo_Kementerian_Keuangan_Republik_Indonesia.png" alt="Logo Kemenkeu" class="w-8 h-8 object-contain">
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold leading-tight text-amber-400">PAKE MOBIL AMBO</h1>
+                    <p class="text-xs text-slate-200">Kanwil DJPb Provinsi Sumatera Barat</p>
+                </div>
+            </div>
+
+            <!-- KANAN ATAS: TOMBOL LOGIN ATAU LOGGED-IN USER INFO -->
+            <div id="nav-auth-section">
+                <!-- Injected dynamically by JS -->
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT LANDING PAGE -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- ADMIN CONTROL PANEL & KELOLA PERSETUJUAN (Hanya Muncul Jika Seksi STA Login) -->
+        <div id="admin-control-panel" class="hidden bg-slate-900 text-white p-5 rounded-2xl shadow-lg border border-slate-800 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-amber-500/20 text-amber-400 p-2 rounded-xl border border-amber-500/30 flex items-center justify-center w-10 h-10">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/22/Logo_Kementerian_Keuangan_Republik_Indonesia.png" alt="Kemenkeu" class="w-6 h-6 object-contain">
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base text-amber-400">Panel Approval Seksi STA - Persetujuan & Riwayat</h3>
+                        <p class="text-xs text-slate-400">Kelola persetujuan pengajuan penggunaan mobil dinas dari seluruh unit kerja.</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <input type="text" id="admin-search-input" onkeyup="filterAdminHistoryTable()" placeholder="Cari driver / tujuan..." class="bg-slate-800 text-white text-xs border border-slate-700 rounded-lg px-3 py-2 focus:ring-1 focus:ring-amber-400 focus:outline-none">
+                    <select id="admin-unit-filter" onchange="filterAdminHistoryTable()" class="bg-slate-800 text-white font-semibold text-xs border border-slate-700 rounded-lg p-2 focus:ring-1 focus:ring-amber-400 focus:outline-none">
+                        <option value="ALL">-- Semua Unit Kerja --</option>
+                        <option value="Bagian Umum">Bagian Umum</option>
+                        <option value="Bidang PPA I">Bidang PPA I</option>
+                        <option value="Bidang PPA II">Bidang PPA II</option>
+                        <option value="Bidang PAPK">Bidang PAPK</option>
+                        <option value="Bidang SKKI">Bidang SKKI</option>
+                    </select>
+                    <button onclick="exportDataCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-file-excel"></i> Ekspor CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- TABEL PERSETUJUAN & ARSIP RIWAYAT -->
+            <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/50">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-800/80 text-amber-300 font-bold uppercase tracking-wider text-[11px] border-b border-slate-700">
+                        <tr>
+                            <th class="p-3">ID / Tanggal</th>
+                            <th class="p-3">Jam Pemakaian</th>
+                            <th class="p-3">Unit Kerja</th>
+                            <th class="p-3">Kendaraan</th>
+                            <th class="p-3">Driver / PJ</th>
+                            <th class="p-3">Keperluan / Tujuan</th>
+                            <th class="p-3 text-center">Status</th>
+                            <th class="p-3 text-center">Aksi Admin</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-history-tbody" class="divide-y divide-slate-800/60 text-slate-300">
+                        <!-- Injected dynamically by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- STATUS CARDS REKAP FLEET MOBIL DINAS -->
+        <section class="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-center">
+                <span class="text-[11px] font-bold text-slate-500 block uppercase">Toyota Fortuner</span>
+                <span class="text-xs font-mono text-slate-400 block">BA 1021 BS</span>
+                <span id="badge-car-1" class="inline-block mt-2 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">Tersedia</span>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-center">
+                <span class="text-[11px] font-bold text-slate-500 block uppercase">Innova Reborn</span>
+                <span class="text-xs font-mono text-slate-400 block">BA 1022 BS</span>
+                <span id="badge-car-2" class="inline-block mt-2 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">Tersedia</span>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-center">
+                <span class="text-[11px] font-bold text-slate-500 block uppercase">Innova Bensin</span>
+                <span class="text-xs font-mono text-slate-400 block">BA 1023 BS</span>
+                <span id="badge-car-3" class="inline-block mt-2 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">Tersedia</span>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-center">
+                <span class="text-[11px] font-bold text-slate-500 block uppercase">Mitsubishi Xpander</span>
+                <span class="text-xs font-mono text-slate-400 block">BA 1024 BS</span>
+                <span id="badge-car-4" class="inline-block mt-2 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">Tersedia</span>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-center col-span-2 md:col-span-1">
+                <span class="text-[11px] font-bold text-slate-500 block uppercase">Isuzu Panther</span>
+                <span class="text-xs font-mono text-slate-400 block">BA 1025 BS</span>
+                <span id="badge-car-5" class="inline-block mt-2 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">Tersedia</span>
+            </div>
+        </section>
+
+        <!-- DASHBOARD GRID: KALENDER & FORM REKAM PEMAKAIAN -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- LEFT 2 COLS: AGENDA AMBO CALENDAR MONITORING -->
+            <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <!-- Calendar Header & Navigation -->
+                <div class="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-calendar-days text-amber-400 text-lg"></i>
+                        <h2 class="font-bold text-sm sm:text-base">Monitoring Kalender Penggunaan</h2>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="changeMonth(-1)" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded transition"><i class="fa-solid fa-chevron-left"></i></button>
+                        <span id="calendar-month-year" class="font-bold text-xs sm:text-sm text-amber-300 px-2">September 2026</span>
+                        <button onclick="changeMonth(1)" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded transition"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- Days of Week Header -->
+                <div class="calendar-grid bg-slate-100 border-b border-slate-200 text-center font-bold text-xs text-slate-600 py-2">
+                    <div class="text-red-600">Minggu</div>
+                    <div>Senin</div>
+                    <div>Selasa</div>
+                    <div>Rabu</div>
+                    <div>Kamis</div>
+                    <div>Jumat</div>
+                    <div>Sabtu</div>
+                </div>
+
+                <!-- Grid Calendar Container -->
+                <div id="calendar-days-container" class="calendar-grid gap-1 p-2 bg-slate-200 flex-grow min-h-[380px]">
+                    <!-- Days injected dynamically -->
+                </div>
+
+                <!-- Calendar Legend -->
+                <div class="p-3 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-600 flex flex-wrap gap-4 items-center justify-between">
+                    <div class="flex items-center space-x-1.5">
+                        <span class="w-3 h-3 bg-emerald-200 border border-emerald-600 rounded"></span>
+                        <span>Disetujui</span>
+                    </div>
+                    <div class="flex items-center space-x-1.5">
+                        <span class="w-3 h-3 bg-amber-200 border border-amber-600 rounded"></span>
+                        <span>Menunggu Persetujuan</span>
+                    </div>
+                    <div class="flex items-center space-x-1.5">
+                        <span class="w-3 h-3 bg-blue-100 border border-blue-400 rounded"></span>
+                        <span>Hari Ini</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT 1 COL: FORM INPUT & DETAIL AGENDA -->
+            <div class="space-y-6">
+
+                <!-- FORM RECORD RENCANA PEMAKAIAN -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4 relative">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-paper-plane text-amber-500"></i> Form Pengajuan Pemakaian
+                        </h3>
+                        <span id="current-unit-badge" class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded border border-slate-300">Akses Terkunci</span>
+                    </div>
+
+                    <!-- FORM PEMAKAIAN -->
+                    <form id="recordForm" onsubmit="handleRecordSubmit(event)" class="space-y-3 text-xs">
+                        <!-- Selector Unit Kerja -->
+                        <div id="admin-unit-container" class="hidden">
+                            <label class="block font-semibold text-slate-700 mb-1">Pilih Unit Kerja Pemohon</label>
+                            <select id="form-admin-unit-select" class="form-input-field w-full border border-slate-300 rounded p-2 focus:ring-1 focus:ring-amber-500 font-bold text-slate-800">
+                                <option value="Bagian Umum">Bagian Umum</option>
+                                <option value="Bidang PPA I">Bidang PPA I</option>
+                                <option value="Bidang PPA II">Bidang PPA II</option>
+                                <option value="Bidang PAPK">Bidang PAPK</option>
+                                <option value="Bidang SKKI">Bidang SKKI</option>
+                            </select>
+                        </div>
+
+                        <div id="user-unit-container">
+                            <label class="block font-semibold text-slate-700 mb-1">Unit Kerja Pemohon</label>
+                            <input type="text" id="form-unit-name" readonly class="w-full bg-slate-100 text-slate-700 font-medium rounded border border-slate-300 p-2">
+                        </div>
+
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Pilih Kendaraan Dinas</label>
+                            <select id="form-car-id" required class="form-input-field w-full border border-slate-300 rounded p-2 focus:ring-1 focus:ring-amber-500">
+                                <option value="1">Toyota Fortuner - BA 1021 BS</option>
+                                <option value="2">Innova Reborn - BA 1022 BS</option>
+                                <option value="3">Innova Bensin - BA 1023 BS</option>
+                                <option value="4">Mitsubishi Xpander - BA 1024 BS</option>
+                                <option value="5">Isuzu Panther - BA 1025 BS</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Nama Driver / Penanggung Jawab</label>
+                            <input type="text" id="form-driver" required placeholder="Contoh: Budi / Pengemudi" class="form-input-field w-full border border-slate-300 rounded p-2 focus:ring-1 focus:ring-amber-500">
+                        </div>
+
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Tujuan / Keperluan Dinas</label>
+                            <textarea id="form-purpose" required rows="2" placeholder="Contoh: Monev KPPN Bukittinggi" class="form-input-field w-full border border-slate-300 rounded p-2 focus:ring-1 focus:ring-amber-500"></textarea>
+                        </div>
+
+                        <!-- TANGGAL PEMAKAIAN (TANGGAL LALU DINONAKTIFKAN MENGGUNAKAN ATRIBUT MIN) -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Tanggal Mulai</label>
+                                <input type="date" id="form-start-date" required class="form-input-field w-full border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-amber-500">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Tanggal Selesai</label>
+                                <input type="date" id="form-end-date" required class="form-input-field w-full border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-amber-500">
+                            </div>
+                        </div>
+
+                        <!-- JAM PEMAKAIAN -->
+                        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1"><i class="fa-regular fa-clock text-amber-500 mr-1"></i>Jam Mulai</label>
+                                <input type="time" id="form-start-time" required class="form-input-field w-full border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-amber-500">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1"><i class="fa-regular fa-clock text-amber-500 mr-1"></i>Jam Selesai</label>
+                                <input type="time" id="form-end-time" required class="form-input-field w-full border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-amber-500">
+                            </div>
+                        </div>
+
+                        <div id="form-error-msg" class="hidden p-2 bg-red-50 text-red-600 text-[11px] rounded border border-red-200">
+                            <!-- Conflict Message -->
+                        </div>
+
+                        <!-- TOMBOL SUBMIT / PROMPT LOGIN -->
+                        <div id="form-btn-container">
+                            <!-- Injected dynamically by JS -->
+                        </div>
+                    </form>
+                </div>
+
+                <!-- DETAIL AGENDA DITANGGAL YANG DIKLIK -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h3 class="font-bold text-xs text-slate-800">
+                            <i class="fa-solid fa-list-ul text-blue-600 mr-1"></i> Agenda Tanggal: <span id="selected-date-label" class="text-amber-600">28 Sep 2026</span>
+                        </h3>
+                    </div>
+                    
+                    <div id="date-agenda-list" class="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-3 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            &copy; 2026 Kanwil DJPb Provinsi Sumatera Barat - Seksi STA. Internal Fleet Management System.
+        </div>
+    </footer>
+
+    <!-- MODAL POPUP LOGIN BERSIH -->
+    <div id="loginModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200">
+            <div class="bg-blue-900 border-b-4 border-amber-500 p-5 text-white flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-amber-500 text-slate-900 rounded-xl flex items-center justify-center p-1.5 shadow-sm">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/22/Logo_Kementerian_Keuangan_Republik_Indonesia.png" alt="Logo Kemenkeu" class="w-full h-full object-contain">
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-amber-400">PAKE MOBIL AMBO</h3>
+                        <p class="text-[10px] text-slate-200">Kanwil DJPb Provinsi Sumatera Barat</p>
+                    </div>
+                </div>
+                <button onclick="closeLoginModal()" class="text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Form Login -->
+            <form id="loginForm" onsubmit="handleLogin(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Username / Akun</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user-gear text-slate-400 absolute left-3 top-3 text-sm"></i>
+                        <input type="text" id="login-username" required placeholder="Masukkan username" class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Password</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock text-slate-400 absolute left-3 top-3 text-sm"></i>
+                        <input type="password" id="login-password" required placeholder="••••••••" class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:outline-none">
+                    </div>
+                </div>
+
+                <div id="login-error" class="hidden p-2.5 bg-red-50 text-red-600 text-xs rounded-lg border border-red-200 text-center font-medium">
+                    Username atau password salah!
+                </div>
+
+                <button type="submit" class="w-full bg-blue-900 hover:bg-blue-950 text-amber-400 font-bold py-2.5 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Masuk Sistem
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        const TODAY_STR = "2026-09-28";
+
+        // DATABASE AKUN LOGINS
+        const USERS = {
+            "seksi_sta": { password: "sta123", name: "Seksi STA", role: "ADMIN" },
+            "bagian_umum": { password: "umum123", name: "Bagian Umum", role: "USER" },
+            "bidang_ppa1": { password: "ppa1123", name: "Bidang PPA I", role: "USER" },
+            "bidang_ppa2": { password: "ppa2123", name: "Bidang PPA II", role: "USER" },
+            "bidang_papk": { password: "papk123", name: "Bidang PAPK", role: "USER" },
+            "bidang_skki": { password: "skki123", name: "Bidang SKKI", role: "USER" }
+        };
+
+        // DAFTAR MOBIL DINAS
+        const CARS = [
+            { id: 1, name: "Toyota Fortuner", plate: "BA 1021 BS" },
+            { id: 2, name: "Innova Reborn", plate: "BA 1022 BS" },
+            { id: 3, name: "Innova Bensin", plate: "BA 1023 BS" },
+            { id: 4, name: "Mitsubishi Xpander", plate: "BA 1024 BS" },
+            { id: 5, name: "Isuzu Panther", plate: "BA 1025 BS" }
+        ];
+
+        // INITIAL DATA PEMAKAIAN DENGAN WAKTU JAM
+        const INITIAL_PLANS = [
+            { id: "REC-101", unit: "Bidang PPA I", carId: 1, driver: "Rahmat Hidayat", purpose: "Monev Penyaluran Dana Desa di Kab. Agam", startDate: "2026-09-21", endDate: "2026-09-21", startTime: "08:00", endTime: "16:00", status: "APPROVED" },
+            { id: "REC-102", unit: "Bagian Umum", carId: 2, driver: "Syaiful", purpose: "Jemput Tamu Kantor Pusat Kemenkeu di Bandara BIM", startDate: "2026-09-22", endDate: "2026-09-22", startTime: "09:30", endTime: "14:00", status: "APPROVED" },
+            { id: "REC-103", unit: "Bidang PAPK", carId: 3, driver: "Doni", purpose: "Pendampingan LKPD Pemda Pasaman", startDate: "2026-09-24", endDate: "2026-09-24", startTime: "07:30", endTime: "17:00", status: "APPROVED" },
+            { id: "REC-104", unit: "Bidang SKKI", carId: 4, driver: "Andi", purpose: "Supervisi KPPN Solok", startDate: "2026-09-28", endDate: "2026-09-28", startTime: "08:00", endTime: "12:00", status: "PENDING" },
+            { id: "REC-105", unit: "Bagian Umum", carId: 1, driver: "Budi", purpose: "Perjalanan Dinas Luar Kota Padang Panjang", startDate: "2026-09-28", endDate: "2026-09-29", startTime: "07:00", endTime: "18:00", status: "APPROVED" }
+        ];
+
+        // STATE
+        let currentUser = localStorage.getItem('djpb_logged_user') || null;
+        let plans = JSON.parse(localStorage.getItem('djpb_plans')) || INITIAL_PLANS;
+        let currentDate = new Date(2026, 8, 1); // Sept 2026
+        let selectedDateStr = TODAY_STR;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupMinDateRestriction();
+            updateAuthUI();
+            renderCalendar();
+            renderDateAgendaDetail(selectedDateStr);
+            updateCarFleetBadges();
+            renderAdminHistoryTable();
+            setDefaultFormTime();
+        });
+
+        // MENGUNCI/BATASI KALENDER PADA FORM AGAR TANGGAL LALU TIDAK BISA DIPILIH
+        function setupMinDateRestriction() {
+            const startDateInput = document.getElementById('form-start-date');
+            const endDateInput = document.getElementById('form-end-date');
+
+            if (startDateInput && endDateInput) {
+                startDateInput.min = TODAY_STR;
+                endDateInput.min = TODAY_STR;
+            }
+        }
+
+        function setDefaultFormTime() {
+            document.getElementById('form-start-time').value = "08:00";
+            document.getElementById('form-end-time').value = "16:00";
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('djpb_plans', JSON.stringify(plans));
+        }
+
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('login-error').classList.add('hidden');
+        }
+
+        function updateAuthUI() {
+            const authSection = document.getElementById('nav-auth-section');
+            const inputs = document.querySelectorAll('.form-input-field');
+            const btnContainer = document.getElementById('form-btn-container');
+
+            if (currentUser && USERS[currentUser]) {
+                const userObj = USERS[currentUser];
+
+                authSection.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="text-right hidden sm:block">
+                            <span class="block text-slate-300 text-[10px] leading-none">Logged as:</span>
+                            <span class="font-bold text-amber-400 text-xs">${userObj.name}</span>
+                        </div>
+                        <span class="bg-amber-500 text-slate-900 text-[10px] font-black px-2 py-0.5 rounded uppercase">${userObj.role}</span>
+                        <button onclick="handleLogout()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition shadow flex items-center gap-1.5">
+                            <i class="fa-solid fa-right-from-bracket"></i> Keluar
+                        </button>
+                    </div>
+                `;
+
+                inputs.forEach(input => input.removeAttribute('disabled'));
+
+                btnContainer.innerHTML = `
+                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-2 rounded transition shadow-sm flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-paper-plane"></i> Kirim Pengajuan Pemakaian
+                    </button>
+                `;
+
+                if (userObj.role === 'ADMIN') {
+                    document.getElementById('admin-control-panel').classList.remove('hidden');
+                    document.getElementById('admin-unit-container').classList.remove('hidden');
+                    document.getElementById('user-unit-container').classList.add('hidden');
+                    document.getElementById('current-unit-badge').innerText = "SEKSI STA";
+                    renderAdminHistoryTable();
+                } else {
+                    document.getElementById('admin-control-panel').classList.add('hidden');
+                    document.getElementById('admin-unit-container').classList.add('hidden');
+                    document.getElementById('user-unit-container').classList.remove('hidden');
+                    document.getElementById('current-unit-badge').innerText = userObj.name;
+                    document.getElementById('form-unit-name').value = userObj.name;
+                }
+            } else {
+                authSection.innerHTML = `
+                    <button onclick="openLoginModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold px-4 py-2 rounded-lg transition shadow-md flex items-center gap-2">
+                        <i class="fa-solid fa-right-to-bracket"></i> Masuk / Login Unit Kerja
+                    </button>
+                `;
+
+                document.getElementById('admin-control-panel').classList.add('hidden');
+                document.getElementById('admin-unit-container').classList.add('hidden');
+                document.getElementById('user-unit-container').classList.remove('hidden');
+                document.getElementById('current-unit-badge').innerText = "Input Terkunci";
+                document.getElementById('form-unit-name').value = "Silakan Login Terlebih Dahulu";
+
+                inputs.forEach(input => input.setAttribute('disabled', 'true'));
+
+                btnContainer.innerHTML = `
+                    <button type="button" onclick="openLoginModal()" class="w-full bg-blue-900 hover:bg-blue-950 text-amber-400 font-bold py-2 rounded transition shadow flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-lock text-xs"></i> Login untuk Mengajukan Pemakaian
+                    </button>
+                `;
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById('login-username').value.trim().toLowerCase();
+            const passwordInput = document.getElementById('login-password').value;
+            const errorDiv = document.getElementById('login-error');
+
+            if (USERS[usernameInput] && USERS[usernameInput].password === passwordInput) {
+                errorDiv.classList.add('hidden');
+                currentUser = usernameInput;
+                localStorage.setItem('djpb_logged_user', currentUser);
+                closeLoginModal();
+                updateAuthUI();
+                renderCalendar();
+                renderDateAgendaDetail(selectedDateStr);
+            } else {
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            if (confirm("Apakah Anda yakin ingin keluar dari sistem?")) {
+                currentUser = null;
+                localStorage.removeItem('djpb_logged_user');
+                updateAuthUI();
+                renderCalendar();
+                renderDateAgendaDetail(selectedDateStr);
+            }
+        }
+
+        function setPlanStatus(id, newStatus) {
+            const plan = plans.find(p => p.id === id);
+            if (!plan) return;
+
+            if (newStatus === 'APPROVED') {
+                plan.status = 'APPROVED';
+                alert(`Pengajuan ${id} milik ${plan.unit} BERHASIL DISETUJUI!`);
+            } else if (newStatus === 'REJECTED') {
+                const reason = prompt("Masukkan alasan penolakan pengajuan ini:", "Jadwal/Kendaraan bentrok atau pemeliharaan.");
+                if (reason === null) return;
+                plan.status = 'REJECTED';
+                plan.rejectReason = reason;
+                alert(`Pengajuan ${id} DITOLAK.`);
+            }
+
+            saveToStorage();
+            renderCalendar();
+            renderDateAgendaDetail(selectedDateStr);
+            updateCarFleetBadges();
+            renderAdminHistoryTable();
+        }
+
+        // RENDER TABEL PERSETUJUAN/RIWAYAT DI ADMIN
+        function renderAdminHistoryTable() {
+            const tbody = document.getElementById('admin-history-tbody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+            const unitFilter = document.getElementById('admin-unit-filter') ? document.getElementById('admin-unit-filter').value : "ALL";
+            const searchKeyword = document.getElementById('admin-search-input') ? document.getElementById('admin-search-input').value.toLowerCase().trim() : "";
+
+            let filteredPlans = [...plans].reverse();
+
+            if (unitFilter !== "ALL") {
+                filteredPlans = filteredPlans.filter(p => p.unit === unitFilter);
+            }
+
+            if (searchKeyword !== "") {
+                filteredPlans = filteredPlans.filter(p => 
+                    p.driver.toLowerCase().includes(searchKeyword) || 
+                    p.purpose.toLowerCase().includes(searchKeyword) ||
+                    p.id.toLowerCase().includes(searchKeyword)
+                );
+            }
+
+            if (filteredPlans.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="p-4 text-center text-slate-500 italic">
+                            Tidak ditemukan data pengajuan penggunaan mobil dinas.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filteredPlans.forEach(p => {
+                const car = CARS.find(c => c.id === p.carId) || { name: 'Mobil Dinas', plate: '-' };
+                const isMultiDay = p.startDate !== p.endDate;
+                const dateDisplay = isMultiDay ? `${p.startDate} s.d ${p.endDate}` : p.startDate;
+                const timeDisplay = `${p.startTime || '08:00'} - ${p.endTime || '16:00'} WIB`;
+
+                let statusBadge = `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-bold">Menunggu</span>`;
+                if (p.status === 'APPROVED') {
+                    statusBadge = `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold">Disetujui</span>`;
+                } else if (p.status === 'REJECTED') {
+                    statusBadge = `<span class="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded text-[10px] font-bold">Ditolak</span>`;
+                }
+
+                let actionBtns = '';
+                if (p.status === 'PENDING') {
+                    actionBtns = `
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="setPlanStatus('${p.id}', 'APPROVED')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-[10px] font-bold transition flex items-center gap-1">
+                                <i class="fa-solid fa-check"></i> Setujui
+                            </button>
+                            <button onclick="setPlanStatus('${p.id}', 'REJECTED')" class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-[10px] font-bold transition flex items-center gap-1">
+                                <i class="fa-solid fa-xmark"></i> Tolak
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    actionBtns = `
+                        <button onclick="deletePlan('${p.id}')" class="text-slate-400 hover:text-red-400 text-[10px] font-medium transition">
+                            <i class="fa-solid fa-trash mr-1"></i>Hapus
+                        </button>
+                    `;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="p-3">
+                            <span class="font-mono text-amber-400 font-bold block">${p.id}</span>
+                            <span class="text-[10px] text-slate-400">${dateDisplay}</span>
+                        </td>
+                        <td class="p-3 font-mono text-amber-300 text-[11px]"><i class="fa-regular fa-clock mr-1"></i>${timeDisplay}</td>
+                        <td class="p-3 font-semibold text-slate-200">${p.unit}</td>
+                        <td class="p-3">
+                            <span class="font-medium text-blue-300 block">${car.name}</span>
+                            <span class="font-mono text-[10px] text-slate-400">${car.plate}</span>
+                        </td>
+                        <td class="p-3 text-slate-300"><i class="fa-solid fa-user-circle mr-1 text-slate-500"></i>${p.driver}</td>
+                        <td class="p-3 text-slate-300 max-w-xs truncate" title="${p.purpose}">${p.purpose}</td>
+                        <td class="p-3 text-center">${statusBadge}</td>
+                        <td class="p-3 text-center">${actionBtns}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filterAdminHistoryTable() {
+            renderAdminHistoryTable();
+            renderCalendar();
+            renderDateAgendaDetail(selectedDateStr);
+        }
+
+        // CALENDAR GENERATOR
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year}`;
+
+            const container = document.getElementById('calendar-days-container');
+            container.innerHTML = '';
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+            const prevMonthDays = new Date(year, month, 0).getDate();
+
+            const unitFilter = (currentUser && USERS[currentUser]?.role === 'ADMIN' && document.getElementById('admin-unit-filter')) ? document.getElementById('admin-unit-filter').value : "ALL";
+
+            let filteredPlans = plans.filter(p => p.status !== 'REJECTED');
+            if (unitFilter !== "ALL") {
+                filteredPlans = filteredPlans.filter(p => p.unit === unitFilter);
+            }
+
+            for (let x = firstDayIndex; x > 0; x--) {
+                const dayNum = prevMonthDays - x + 1;
+                container.innerHTML += `
+                    <div class="bg-slate-100 p-1.5 rounded min-h-[70px] text-slate-300 text-xs">
+                        <span class="font-bold">${dayNum}</span>
+                    </div>
+                `;
+            }
+
+            for (let day = 1; day <= totalDaysInMonth; day++) {
+                const dayStr = String(day).padStart(2, '0');
+                const monthStr = String(month + 1).padStart(2, '0');
+                const fullDateStr = `${year}-${monthStr}-${dayStr}`;
+
+                const dayPlans = filteredPlans.filter(p => fullDateStr >= p.startDate && fullDateStr <= p.endDate);
+
+                const isSunday = new Date(year, month, day).getDay() === 0;
+                const isSelected = fullDateStr === selectedDateStr;
+                const isToday = (fullDateStr === TODAY_STR);
+
+                let dayBg = "bg-white hover:border-amber-400";
+                if (isSelected) dayBg = "bg-amber-50 border-2 border-amber-500 shadow";
+                else if (isToday) dayBg = "bg-blue-50 border-2 border-blue-400";
+
+                let agendaTag = '';
+                if (dayPlans.length > 0) {
+                    const approvedCount = dayPlans.filter(p => p.status === 'APPROVED').length;
+                    const pendingCount = dayPlans.filter(p => p.status === 'PENDING').length;
+
+                    agendaTag = `<div class="mt-1 space-y-0.5">`;
+                    if (approvedCount > 0) {
+                        agendaTag += `<div class="bg-emerald-100 text-emerald-800 text-[9px] font-extrabold py-0.5 px-1 rounded text-center border border-emerald-300">${approvedCount} Disetujui</div>`;
+                    }
+                    if (pendingCount > 0) {
+                        agendaTag += `<div class="bg-amber-100 text-amber-800 text-[9px] font-extrabold py-0.5 px-1 rounded text-center border border-amber-300">${pendingCount} Menunggu</div>`;
+                    }
+                    agendaTag += `</div>`;
+                }
+
+                container.innerHTML += `
+                    <div onclick="selectCalendarDate('${fullDateStr}')" class="${dayBg} p-1.5 rounded min-h-[70px] border border-slate-200 cursor-pointer transition flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <span class="font-bold text-xs ${isSunday ? 'text-red-600' : 'text-slate-700'}">${day}</span>
+                            ${isToday ? '<span class="text-[9px] font-bold text-blue-600 bg-blue-100 px-1 rounded">Hari Ini</span>' : ''}
+                        </div>
+                        ${agendaTag}
+                    </div>
+                `;
+            }
+
+            const totalCells = firstDayIndex + totalDaysInMonth;
+            const nextDays = (totalCells > 35) ? 42 - totalCells : 35 - totalCells;
+            for (let i = 1; i <= nextDays; i++) {
+                container.innerHTML += `
+                    <div class="bg-slate-100 p-1.5 rounded min-h-[70px] text-slate-300 text-xs">
+                        <span class="font-bold">${i}</span>
+                    </div>
+                `;
+            }
+        }
+
+        function changeMonth(offset) {
+            currentDate.setMonth(currentDate.getMonth() + offset);
+            renderCalendar();
+        }
+
+        function selectCalendarDate(dateStr) {
+            selectedDateStr = dateStr;
+            renderCalendar();
+            renderDateAgendaDetail(dateStr);
+
+            // Hanya otomatis mengisi form jika tanggal tidak lebih kecil dari hari ini
+            if (dateStr >= TODAY_STR) {
+                document.getElementById('form-start-date').value = dateStr;
+                document.getElementById('form-end-date').value = dateStr;
+            }
+        }
+
+        function renderDateAgendaDetail(dateStr) {
+            const label = document.getElementById('selected-date-label');
+            const d = new Date(dateStr);
+            label.innerText = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            const container = document.getElementById('date-agenda-list');
+            container.innerHTML = '';
+
+            const unitFilter = (currentUser && USERS[currentUser]?.role === 'ADMIN' && document.getElementById('admin-unit-filter')) ? document.getElementById('admin-unit-filter').value : "ALL";
+
+            let filteredPlans = plans;
+            if (unitFilter !== "ALL") {
+                filteredPlans = plans.filter(p => p.unit === unitFilter);
+            }
+
+            const dayPlans = filteredPlans.filter(p => dateStr >= p.startDate && dateStr <= p.endDate);
+
+            if (dayPlans.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-6 text-slate-400 text-xs">
+                        <i class="fa-solid fa-calendar-xmark text-lg mb-1 block"></i>
+                        Belum ada pengajuan pada tanggal ini.
+                    </div>
+                `;
+                return;
+            }
+
+            const activeUserObj = USERS[currentUser];
+            const isAdmin = activeUserObj && activeUserObj.role === 'ADMIN';
+
+            dayPlans.forEach(p => {
+                const car = CARS.find(c => c.id === p.carId) || { name: 'Mobil Dinas', plate: '-' };
+                const isMyUnit = activeUserObj && (isAdmin || p.unit === activeUserObj.name);
+
+                let badgeColor = "bg-amber-100 text-amber-800 border-amber-300";
+                let statusLabel = "Menunggu";
+
+                if (p.status === 'APPROVED') {
+                    badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
+                    statusLabel = "Disetujui";
+                } else if (p.status === 'REJECTED') {
+                    badgeColor = "bg-red-100 text-red-800 border-red-300";
+                    statusLabel = "Ditolak";
+                }
+
+                const timeStr = `${p.startTime || '08:00'} - ${p.endTime || '16:00'} WIB`;
+
+                container.innerHTML += `
+                    <div class="p-2.5 rounded-lg border ${isMyUnit ? 'bg-amber-50/60 border-amber-300' : 'bg-slate-50 border-slate-200'} text-xs space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-800">${p.unit}</span>
+                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}">${statusLabel}</span>
+                        </div>
+                        <p class="font-semibold text-blue-900">${car.name} (${car.plate})</p>
+                        <p class="text-[11px] font-mono text-amber-700"><i class="fa-regular fa-clock mr-1"></i>${timeStr}</p>
+                        <p class="text-slate-600"><i class="fa-solid fa-bullseye text-slate-400 mr-1"></i>${p.purpose}</p>
+                        <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-200/60">
+                            <div><i class="fa-solid fa-user mr-1"></i>${p.driver}</div>
+                            ${isMyUnit ? `<button onclick="deletePlan('${p.id}')" class="text-red-600 hover:underline"><i class="fa-solid fa-trash mr-1"></i>Hapus</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // INPUT PENGAJUAN BARU DENGAN VALIDASI TANGGAL LALU
+        function handleRecordSubmit(e) {
+            e.preventDefault();
+            if (!currentUser) {
+                openLoginModal();
+                return;
+            }
+
+            const errDiv = document.getElementById('form-error-msg');
+            errDiv.classList.add('hidden');
+
+            const activeUserObj = USERS[currentUser];
+            let targetUnit = activeUserObj.name;
+
+            if (activeUserObj.role === 'ADMIN') {
+                targetUnit = document.getElementById('form-admin-unit-select').value;
+            }
+
+            const carId = parseInt(document.getElementById('form-car-id').value);
+            const driver = document.getElementById('form-driver').value.trim();
+            const purpose = document.getElementById('form-purpose').value.trim();
+            const startDate = document.getElementById('form-start-date').value;
+            const endDate = document.getElementById('form-end-date').value;
+            const startTime = document.getElementById('form-start-time').value;
+            const endTime = document.getElementById('form-end-time').value;
+
+            // VALIDASI TANGGAL LALU
+            if (startDate < TODAY_STR || endDate < TODAY_STR) {
+                errDiv.innerText = "Tidak dapat mengajukan pemakaian pada tanggal yang sudah lewat!";
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (endDate < startDate) {
+                errDiv.innerText = "Tanggal selesai harus sama atau lebih lambat dari tanggal mulai!";
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (startDate === endDate && endTime <= startTime) {
+                errDiv.innerText = "Jam selesai harus lebih lambat dari jam mulai!";
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            // Cek bentrok hanya dengan pengajuan yang DISETUJUI (APPROVED)
+            const hasConflict = plans.some(p => {
+                if (p.carId !== carId || p.status !== 'APPROVED') return false;
+                return (startDate <= p.endDate && endDate >= p.startDate);
+            });
+
+            if (hasConflict) {
+                errDiv.innerText = "BENTROK! Mobil ini sudah DISETUJUI penggunaannya oleh unit kerja lain pada tanggal tersebut.";
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            const isAutoApproved = activeUserObj.role === 'ADMIN';
+
+            const newPlan = {
+                id: 'REC-' + Math.floor(100 + Math.random() * 900),
+                unit: targetUnit,
+                carId,
+                driver,
+                purpose,
+                startDate,
+                endDate,
+                startTime,
+                endTime,
+                status: isAutoApproved ? 'APPROVED' : 'PENDING'
+            };
+
+            plans.push(newPlan);
+            saveToStorage();
+
+            renderCalendar();
+            renderDateAgendaDetail(selectedDateStr);
+            updateCarFleetBadges();
+            renderAdminHistoryTable();
+
+            document.getElementById('recordForm').reset();
+            setDefaultFormTime();
+
+            if (activeUserObj.role !== 'ADMIN') {
+                document.getElementById('form-unit-name').value = targetUnit;
+                alert(`Pengajuan pemakaian mobil dinas (${startTime} - ${endTime} WIB) berhasil dikirim! Menunggu persetujuan Seksi STA.`);
+            } else {
+                alert(`Perekaman mobil dinas untuk ${targetUnit} berhasil disimpan dan langsung disetujui!`);
+            }
+        }
+
+        function deletePlan(id) {
+            if (confirm("Apakah Anda yakin ingin menghapus data pengajuan ini?")) {
+                plans = plans.filter(p => p.id !== id);
+                saveToStorage();
+                renderCalendar();
+                renderDateAgendaDetail(selectedDateStr);
+                updateCarFleetBadges();
+                renderAdminHistoryTable();
+            }
+        }
+
+        function updateCarFleetBadges() {
+            CARS.forEach(car => {
+                const badge = document.getElementById(`badge-car-${car.id}`);
+                const isApprovedToday = plans.some(p => p.carId === car.id && p.status === 'APPROVED' && TODAY_STR >= p.startDate && TODAY_STR <= p.endDate);
+
+                if (isApprovedToday) {
+                    badge.innerText = "Digunakan";
+                    badge.className = "inline-block mt-2 px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-300";
+                } else {
+                    badge.innerText = "Tersedia";
+                    badge.className = "inline-block mt-2 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300";
+                }
+            });
+        }
+
+        function exportDataCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,ID,Unit Kerja,Mobil,Nopol,Pengemudi,Tujuan,Tanggal Mulai,Tanggal Selesai,Jam Mulai,Jam Selesai,Status\n";
+            plans.forEach(p => {
+                const car = CARS.find(c => c.id === p.carId) || { name: 'Mobil', plate: '-' };
+                csvContent += `"${p.id}","${p.unit}","${car.name}","${car.plate}","${p.driver}","${p.purpose}","${p.startDate}","${p.endDate}","${p.startTime || '08:00'}","${p.endTime || '16:00'}","${p.status}"\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Data_Pengajuan_Mobil_DJPb_Sumbar.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
